@@ -1,0 +1,1 @@
+El ultimo proyecto perteneciente a las pasantias de la UTN, para la empresa West IT. El cual consiste en un programa que integra IA via APIs, con el objetivo de extraer datos de cualquier jpg directo a un archivo json de manera ordenada.
