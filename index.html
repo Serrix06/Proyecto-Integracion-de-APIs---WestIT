@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Procesador de Cotizaciones IA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-slate-100 min-h-screen p-8 flex items-center justify-center font-sans">
+
+    <div class="w-full max-w-4xl bg-white p-8 rounded-xl shadow-lg border border-slate-200"
+         x-data="{
+            // URL configurada en un solo lugar. Cuando subas a un VPS, solo cambiás esto.
+            apiUrl: 'http://localhost:8000/api/extraer-cotizacion',
+            
+            loading: false,
+            resultado: null,
+            error: null,
+            
+            procesarImagen(e) {
+                this.loading = true;
+                this.resultado = null;
+                this.error = null;
+
+                const formData = new FormData();
+                formData.append('imagen', e.target.imagen.files[0]);
+
+                // Hacemos el Fetch usando la variable centralizada
+                fetch(this.apiUrl, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(async res => {
+                    if (!res.ok) {
+                        const err = await res.json();
+                        throw new Error(err.detail || 'Error al procesar la imagen en el servidor');
+                    }
+                    return res.json();
+                })
+                .then(data => {
+                    this.resultado = data;
+                    this.loading = false;
+                })
+                .catch(err => {
+                    this.error = err.message;
+                    this.loading = false;
+                });
+            }
+         }">
+
+        <h1 class="text-2xl font-bold mb-6 text-slate-800">Cargar Planilla de Cotización</h1>
+
+        <form @submit.prevent="procesarImagen" class="space-y-6">
+            <div class="border-2 border-dashed border-slate-300 rounded-lg p-6 bg-slate-50 text-center">
+                <label class="block text-sm font-medium text-slate-700 mb-2 cursor-pointer">
+                    Seleccionar Imagen (JPG, PNG)
+                    <input type="file" name="imagen" accept="image/jpeg, image/png" required
+                           class="mt-3 block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer">
+                </label>
+            </div>
+            
+            <button type="submit" :disabled="loading"
+                    class="w-full sm:w-auto px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-colors">
+                <svg x-show="loading" class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" style="display: none;">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span x-text="loading ? 'Procesando con IA...' : 'Extraer Datos'"></span>
+            </button>
+        </form>
+
+        <div x-show="error" class="mt-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-lg" x-text="error" style="display: none;"></div>
+
+        <div x-show="resultado" class="mt-8" style="display: none;">
+            <div class="flex items-center justify-between mb-3">
+                <h2 class="text-lg font-bold text-slate-800">Resultado JSON:</h2>
+                <span class="bg-green-100 text-green-800 text-xs font-semibold px-2.5 py-0.5 rounded border border-green-200">Extracción Exitosa</span>
+            </div>
+            <div class="bg-slate-900 rounded-lg shadow-inner overflow-hidden">
+                <pre class="text-green-400 p-5 overflow-x-auto text-sm font-mono leading-relaxed" x-text="JSON.stringify(resultado, null, 2)"></pre>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
